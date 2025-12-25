@@ -1,11 +1,7 @@
 <script setup lang="ts">
-interface Props {
-  disabled?: boolean;
-  variant?: "primary" | "secondary";
-  type?: "button" | "submit" | "reset";
-}
+import type { ButtonProps } from "./types";
 
-withDefaults(defineProps<Props>(), {
+withDefaults(defineProps<ButtonProps>(), {
   disabled: false,
   variant: "primary",
   type: "button",
@@ -21,8 +17,8 @@ withDefaults(defineProps<Props>(), {
       disabled
         ? 'bg-gray-800 text-gray-600 cursor-not-allowed opacity-50'
         : variant === 'primary'
-        ? 'bg-[#33415580] text-white hover:bg-[#334155]'
-        : 'bg-gray-950 text-slate-300 hover:bg-black',
+          ? 'bg-[#33415580] text-white hover:bg-[#334155]'
+          : 'bg-gray-950 text-slate-300 hover:bg-black',
       !disabled && 'active:scale-95 shadow-lg',
     ]"
   >

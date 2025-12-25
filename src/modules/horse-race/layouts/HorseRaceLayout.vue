@@ -7,7 +7,7 @@ import RaceHeader from "../components/RaceHeader.vue";
     <RaceHeader @generate="$emit('generate')" @start-pause="$emit('start-pause')" />
 
     <div class="grid grid-cols-12 gap-4 flex-1 overflow-hidden">
-      <aside class="col-span-2 border border-slate-800 rounded">
+      <aside class="col-span-2 border border-slate-800 h-full overflow-hidden rounded">
         <slot name="left" />
       </aside>
 
