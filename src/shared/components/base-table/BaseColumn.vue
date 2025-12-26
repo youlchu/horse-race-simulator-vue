@@ -21,15 +21,17 @@ onMounted(() => {
   }
 });
 
-watch(
-  () => ({ ...props }),
-  (newProps) => {
-    if (updateColumn) {
-      updateColumn(props.dataKey, newProps);
-    }
-  },
-  { deep: true }
-);
+watch([() => props.label, () => props.width, () => props.align], () => {
+  if (updateColumn) {
+    updateColumn(props.dataKey, {
+      dataKey: props.dataKey,
+      label: props.label,
+      width: props.width,
+      align: props.align,
+      cellRenderer: props.cellRenderer,
+    });
+  }
+});
 
 onBeforeUnmount(() => {
   if (unregisterColumn) {
