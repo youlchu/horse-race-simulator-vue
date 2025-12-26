@@ -1,15 +1,104 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref, watch, onUnmounted } from "vue";
 import type { RaceState } from "../types";
 import horseImg from "@/assets/images/horse-1.png";
-import horseImg2 from "@/assets/images/horse-2.png";
-import horseImg3 from "@/assets/images/horse-3.png";
-import horseImg4 from "@/assets/images/horse-4.png";
 
 const store = useStore<RaceState>();
 const currentRoundIndex = computed(() => store.state.currentRoundIndex);
 const activeRound = computed(() => store.getters.activeRound);
 const hasSchedule = computed(() => store.state.schedule.length > 0);
+const isRaceActive = computed(() => store.state.isRaceActive);
+
+const horsePositions = ref<Map<number, number>>(new Map());
+let animationFrame: number | null = null;
+
+const resetPositions = () => {
+  horsePositions.value.clear();
+  activeRound.value?.participants.forEach((horse: { id: number }) => {
+    horsePositions.value.set(horse.id, 0);
+  });
+};
+
+watch(currentRoundIndex, () => {
+  resetPositions();
+});
+
+watch(
+  activeRound,
+  () => {
+    resetPositions();
+  },
+  { immediate: true }
+);
+
+const runRace = () => {
+  if (!isRaceActive.value || !activeRound.value) {
+    return;
+  }
+
+  const participants = activeRound.value.participants;
+  let raceFinished = false;
+
+  const animate = () => {
+    if (!isRaceActive.value) {
+      if (animationFrame) cancelAnimationFrame(animationFrame);
+      return;
+    }
+
+    participants.forEach((horse: { id: number; condition: number }) => {
+      const currentPos = horsePositions.value.get(horse.id) || 0;
+
+      if (currentPos < 100) {
+        let speed = 0.05;
+
+        if (horse.condition >= 90) {
+          speed = 0.08 + Math.random() * 0.04;
+        } else if (horse.condition >= 70) {
+          speed = 0.05 + Math.random() * 0.05;
+        } else if (horse.condition >= 50) {
+          speed = 0.03 + Math.random() * 0.04;
+        } else {
+          speed = 0.02 + Math.random() * 0.02;
+        }
+
+        horsePositions.value.set(horse.id, Math.min(100, currentPos + speed));
+      } else if (!raceFinished) {
+        raceFinished = true;
+        setTimeout(() => {
+          store.dispatch("toggleRace");
+
+          setTimeout(() => {
+            if (currentRoundIndex.value < store.state.schedule.length - 1) {
+              store.commit("NEXT_ROUND");
+            }
+          }, 2000);
+        }, 100);
+      }
+    });
+
+    if (!raceFinished) {
+      animationFrame = requestAnimationFrame(animate);
+    }
+  };
+
+  animate();
+};
+
+watch(isRaceActive, (newVal) => {
+  if (newVal) {
+    runRace();
+  } else {
+    if (animationFrame) cancelAnimationFrame(animationFrame);
+  }
+});
+
+onUnmounted(() => {
+  if (animationFrame) cancelAnimationFrame(animationFrame);
+});
+
+const getHorsePosition = (horseId: number) => {
+  return horsePositions.value.get(horseId) || 0;
+};
 </script>
 
 <template>
@@ -23,7 +112,7 @@ const hasSchedule = computed(() => store.state.schedule.length > 0);
     <template v-else>
       <div class="flex justify-between items-center mb-4 px-2">
         <span class="text-[20px] font-bold tracking-[0.2em] text-orange-600 uppercase">
-          {{ currentRoundIndex + 1 }}ST lab</span
+          {{ currentRoundIndex + 1 }}ST lap</span
         >
         <span class="text-[10px] font-bold tracking-[0.2em] text-orange-500 uppercase italic"
           >Finish</span
@@ -41,8 +130,11 @@ const hasSchedule = computed(() => store.state.schedule.length > 0);
           class="flex-1 flex items-center relative border-b border-slate-800/50 last:border-0 group hover:bg-slate-800/30 transition-colors"
         >
           <div
-            class="relative flex items-center transition-all duration-500 ease-linear"
-            :style="{ left: '0%' }"
+            class="relative flex items-center"
+            :style="{
+              left: `${getHorsePosition(horse.id)}%`,
+              transition: 'left 0.05s linear',
+            }"
           >
             <img
               :src="horseImg"
@@ -72,9 +164,3 @@ const hasSchedule = computed(() => store.state.schedule.length > 0);
     </template>
   </div>
 </template>
-
-<style scoped>
-img {
-  transition: filter 0.3s ease;
-}
-</style>
