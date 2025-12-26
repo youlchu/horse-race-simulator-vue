@@ -59,3 +59,19 @@ export interface RaceEngineState {
   animationFrameId: number | null;
   finishTimes: Map<number, number>;
 }
+
+// store types
+export type RaceMutations = {
+  SET_HORSES: Horse[];
+  SET_SCHEDULE: Round[];
+  SET_RACE_ACTIVE: boolean;
+  NEXT_ROUND: undefined;
+  ADD_RACE_RESULT: RaceResult;
+};
+
+export type RaceActions = {
+  initializeHorses: undefined;
+  createSchedule: number;
+  toggleRace: undefined;
+  addResult: RaceResult;
+};

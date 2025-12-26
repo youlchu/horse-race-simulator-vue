@@ -46,7 +46,7 @@ const sortedWinners = computed(() => {
                 label="Time"
                 width="35%"
                 align="center"
-                :cellRenderer="({ value }: { value: number }) => `${(value / 1000).toFixed(2)}s`"
+                :cellRenderer="({ value }) => `${((value as number) / 1000).toFixed(2)}s`"
               />
             </BaseTable>
           </div>

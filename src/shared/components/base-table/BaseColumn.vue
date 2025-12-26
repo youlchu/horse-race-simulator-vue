@@ -1,13 +1,13 @@
-<script setup lang="ts">
+<script setup lang="ts" generic="T = Record<string, unknown>">
 import type { ColumnProps } from "./types";
 
-const props = withDefaults(defineProps<ColumnProps>(), {
+const props = withDefaults(defineProps<ColumnProps<T>>(), {
   align: "left",
 });
 
-const registerColumn = inject<(column: ColumnProps) => void>("registerColumn");
-const unregisterColumn = inject<(dataKey: string) => void>("unregisterColumn");
-const updateColumn = inject<(dataKey: string, column: ColumnProps) => void>("updateColumn");
+const registerColumn = inject<(_column: ColumnProps<T>) => void>("registerColumn");
+const unregisterColumn = inject<(_dataKey: string) => void>("unregisterColumn");
+const updateColumn = inject<(_dataKey: string, _column: ColumnProps<T>) => void>("updateColumn");
 
 onMounted(() => {
   if (registerColumn) {

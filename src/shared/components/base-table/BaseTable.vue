@@ -1,18 +1,19 @@
-<script setup lang="ts">
+<script setup lang="ts" generic="T = Record<string, unknown>">
 import type { TableProps, TableColumn } from "./types";
 
-const props = defineProps<TableProps>();
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const props = defineProps<TableProps<T>>();
 
-const columns = ref<TableColumn[]>([]);
+const columns = ref<TableColumn<T>[]>([]);
 
-const registerColumn = (column: TableColumn) => {
+const registerColumn = (column: TableColumn<T>) => {
   const existingIndex = columns.value.findIndex((col) => col.dataKey === column.dataKey);
   if (existingIndex === -1) {
     columns.value.push(column);
   }
 };
 
-const updateColumn = (dataKey: string, updatedColumn: TableColumn) => {
+const updateColumn = (dataKey: string, updatedColumn: TableColumn<T>) => {
   const index = columns.value.findIndex((col) => col.dataKey === dataKey);
   if (index !== -1) {
     columns.value[index] = { ...updatedColumn };
@@ -41,8 +42,8 @@ const getAlignClass = (align?: string) => {
   }
 };
 
-const getCellValue = (row: any, column: TableColumn) => {
-  const value = row[column.dataKey];
+const getCellValue = (row: T, column: TableColumn<T>) => {
+  const value = row[column.dataKey as keyof T];
   if (column.cellRenderer) {
     return column.cellRenderer({ row, value });
   }

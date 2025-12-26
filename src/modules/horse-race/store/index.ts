@@ -2,6 +2,10 @@ import type { Horse, RaceState, Round, RaceResult } from "../types";
 import { mockHorses } from "../_mocks/horses";
 import { generateSchedule } from "../utils/raceUtils";
 
+// Vuex action context type definitions
+type StoreCommit = (mutation: string, payload?: unknown) => void;
+type StoreDispatch = (action: string, payload?: unknown) => void;
+
 export const raceStore = createStore<RaceState>({
   state: {
     horses: [],
@@ -34,7 +38,7 @@ export const raceStore = createStore<RaceState>({
   },
 
   actions: {
-    initializeHorses({ commit }: { commit: (mutation: string, payload?: any) => void }) {
+    initializeHorses({ commit }: { commit: StoreCommit }) {
       commit("SET_HORSES", [...mockHorses]);
     },
 
@@ -45,8 +49,8 @@ export const raceStore = createStore<RaceState>({
         dispatch,
       }: {
         state: RaceState;
-        commit: (mutation: string, payload?: any) => void;
-        dispatch: (action: string, payload?: any) => void;
+        commit: StoreCommit;
+        dispatch: StoreDispatch;
       },
       roundCount: number = 6
     ) {
@@ -58,20 +62,11 @@ export const raceStore = createStore<RaceState>({
       commit("SET_SCHEDULE", schedule);
     },
 
-    toggleRace({
-      state,
-      commit,
-    }: {
-      state: RaceState;
-      commit: (mutation: string, payload?: any) => void;
-    }) {
+    toggleRace({ state, commit }: { state: RaceState; commit: StoreCommit }) {
       commit("SET_RACE_ACTIVE", !state.isRaceActive);
     },
 
-    addResult(
-      { commit }: { commit: (mutation: string, payload?: any) => void },
-      result: RaceResult
-    ) {
+    addResult({ commit }: { commit: StoreCommit }, result: RaceResult) {
       commit("ADD_RACE_RESULT", result);
     },
   },
