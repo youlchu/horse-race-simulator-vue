@@ -3,9 +3,16 @@ import type { RaceState } from "../types";
 
 const store = useStore<RaceState>();
 
+const hasSchedule = computed(() => store.state.schedule.length > 0);
+
 const handleGenerateProgram = () => {
   store.dispatch("createSchedule", 6);
   console.log("Generated Schedule:", store.state.schedule);
+};
+
+const handleToggleRace = () => {
+  if (!hasSchedule.value) return;
+  store.dispatch("toggleRace");
 };
 </script>
 
@@ -30,9 +37,13 @@ const handleGenerateProgram = () => {
     </div>
 
     <div class="flex gap-4">
-      <BaseButton variant="secondary" @click="handleGenerateProgram"> Generate Program </BaseButton>
+      <BaseButton variant="secondary" @click="handleGenerateProgram" :disabled="hasSchedule">
+        Generate Program
+      </BaseButton>
 
-      <BaseButton variant="primary" @click="$emit('start-pause')"> Start / Pause </BaseButton>
+      <BaseButton variant="primary" @click="handleToggleRace" :disabled="!hasSchedule">
+        {{ store.state.isRaceActive ? "Pause" : "Start" }}
+      </BaseButton>
     </div>
   </header>
 </template>

@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed, ref, watch, onUnmounted } from "vue";
-import type { RaceState } from "../types";
-import horseImg from "@/assets/images/horse-1.png";
+import { useRaceEngine } from "../composable/useRaceEngine";
+import type { RaceState, RaceWinner } from "../types";
+import { getColoredFilter } from "../utils/raceUtils";
+import RaceResultDialog from "./RaceResultDialog.vue";
 
 const store = useStore<RaceState>();
 const currentRoundIndex = computed(() => store.state.currentRoundIndex);
@@ -9,95 +10,50 @@ const activeRound = computed(() => store.getters.activeRound);
 const hasSchedule = computed(() => store.state.schedule.length > 0);
 const isRaceActive = computed(() => store.state.isRaceActive);
 
-const horsePositions = ref<Map<number, number>>(new Map());
-let animationFrame: number | null = null;
+const raceEngine = useRaceEngine(computed(() => activeRound.value?.participants || []));
 
-const resetPositions = () => {
-  horsePositions.value.clear();
-  activeRound.value?.participants.forEach((horse: { id: number }) => {
-    horsePositions.value.set(horse.id, 0);
-  });
-};
+const showResultDialog = ref(false);
+const currentRaceResult = ref<{
+  roundId: number;
+  distance: number;
+  winners: RaceWinner[];
+} | null>(null);
 
-watch(currentRoundIndex, () => {
-  resetPositions();
-});
+watch(isRaceActive, (active) => {
+  if (!activeRound.value) return;
 
-watch(
-  activeRound,
-  () => {
-    resetPositions();
-  },
-  { immediate: true }
-);
+  if (active) {
+    raceEngine.start(() => {
+      store.dispatch("toggleRace");
 
-const runRace = () => {
-  if (!isRaceActive.value || !activeRound.value) {
-    return;
-  }
+      const winners = raceEngine.getResults();
 
-  const participants = activeRound.value.participants;
-  let raceFinished = false;
+      store.dispatch("addResult", {
+        roundId: activeRound.value!.id,
+        distance: activeRound.value!.distance,
+        winners,
+      });
 
-  const animate = () => {
-    if (!isRaceActive.value) {
-      if (animationFrame) cancelAnimationFrame(animationFrame);
-      return;
-    }
-
-    participants.forEach((horse: { id: number; condition: number }) => {
-      const currentPos = horsePositions.value.get(horse.id) || 0;
-
-      if (currentPos < 100) {
-        let speed = 0.05;
-
-        if (horse.condition >= 90) {
-          speed = 0.08 + Math.random() * 0.04;
-        } else if (horse.condition >= 70) {
-          speed = 0.05 + Math.random() * 0.05;
-        } else if (horse.condition >= 50) {
-          speed = 0.03 + Math.random() * 0.04;
-        } else {
-          speed = 0.02 + Math.random() * 0.02;
-        }
-
-        horsePositions.value.set(horse.id, Math.min(100, currentPos + speed));
-      } else if (!raceFinished) {
-        raceFinished = true;
-        setTimeout(() => {
-          store.dispatch("toggleRace");
-
-          setTimeout(() => {
-            if (currentRoundIndex.value < store.state.schedule.length - 1) {
-              store.commit("NEXT_ROUND");
-            }
-          }, 2000);
-        }, 100);
-      }
+      currentRaceResult.value = {
+        roundId: activeRound.value!.id,
+        distance: activeRound.value!.distance,
+        winners,
+      };
+      showResultDialog.value = true;
     });
-
-    if (!raceFinished) {
-      animationFrame = requestAnimationFrame(animate);
-    }
-  };
-
-  animate();
-};
-
-watch(isRaceActive, (newVal) => {
-  if (newVal) {
-    runRace();
   } else {
-    if (animationFrame) cancelAnimationFrame(animationFrame);
+    raceEngine.stop();
   }
 });
 
-onUnmounted(() => {
-  if (animationFrame) cancelAnimationFrame(animationFrame);
-});
+const handleCloseDialog = () => {
+  showResultDialog.value = false;
 
-const getHorsePosition = (horseId: number) => {
-  return horsePositions.value.get(horseId) || 0;
+  setTimeout(() => {
+    if (currentRoundIndex.value < store.state.schedule.length - 1) {
+      store.commit("NEXT_ROUND");
+    }
+  }, 300);
 };
 </script>
 
@@ -112,16 +68,16 @@ const getHorsePosition = (horseId: number) => {
     <template v-else>
       <div class="flex justify-between items-center mb-4 px-2">
         <span class="text-[20px] font-bold tracking-[0.2em] text-orange-600 uppercase">
-          {{ currentRoundIndex + 1 }}ST lap</span
-        >
-        <span class="text-[10px] font-bold tracking-[0.2em] text-orange-500 uppercase italic"
-          >Finish</span
-        >
+          {{ currentRoundIndex + 1 }}ST lap
+        </span>
+        <span class="text-[10px] font-bold tracking-[0.2em] text-orange-500 uppercase italic">
+          Finish
+        </span>
       </div>
 
       <div class="flex-1 flex flex-col relative border-y border-slate-800">
         <div
-          class="absolute right-12 top-0 bottom-0 w-1 bg-orange-600/30 border-r border-orange-500/50 z-10 shadow-[0_0_15px_rgba(249,115,22,0.3)]"
+          class="absolute right-[2%] top-0 bottom-0 w-1 bg-orange-600/30 border-r border-orange-500/50 z-10"
         ></div>
 
         <div
@@ -132,19 +88,39 @@ const getHorsePosition = (horseId: number) => {
           <div
             class="relative flex items-center"
             :style="{
-              left: `${getHorsePosition(horse.id)}%`,
+              left: `${raceEngine.getPosition(horse.id)}%`,
               transition: 'left 0.05s linear',
             }"
           >
+            <div
+              v-if="raceEngine.getNamePosition(horse.id) === 'front'"
+              class="absolute right-full mr-2 whitespace-nowrap"
+            >
+              <span
+                class="text-[9px] font-bold px-1.5 py-0.5 rounded border flex items-center gap-1.5"
+                :style="{
+                  backgroundColor: `${horse.color}15`,
+                  borderColor: `${horse.color}60`,
+                  color: horse.color,
+                }"
+              >
+                <span class="w-2 h-2 rounded-full" :style="{ backgroundColor: horse.color }"></span>
+                {{ horse.name }}
+              </span>
+            </div>
+
             <img
-              :src="horseImg"
+              :src="raceEngine.getHorseImage(horse.id)"
               alt="Horse"
-              class="h-8 w-auto object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.5)]"
-              :style="{ filter: `invert(1) brightness(1.5) drop-shadow(0 0 8px ${horse.color})` }"
+              class="h-8 w-auto object-contain transition-all"
+              :style="{
+                filter: getColoredFilter(horse.color),
+              }"
             />
 
             <div
-              class="absolute -bottom-1 left-1/2 -translate-x-1/2 translate-y-full whitespace-nowrap"
+              v-if="raceEngine.getNamePosition(horse.id) === 'back'"
+              class="absolute left-full ml-2 whitespace-nowrap"
             >
               <span
                 class="text-[9px] font-bold px-1.5 py-0.5 rounded border flex items-center gap-1.5"
@@ -162,5 +138,14 @@ const getHorsePosition = (horseId: number) => {
         </div>
       </div>
     </template>
+
+    <RaceResultDialog
+      v-if="currentRaceResult"
+      :show="showResultDialog"
+      :round-id="currentRaceResult.roundId"
+      :distance="currentRaceResult.distance"
+      :winners="currentRaceResult.winners"
+      @close="handleCloseDialog"
+    />
   </div>
 </template>

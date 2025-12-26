@@ -18,9 +18,17 @@ export interface ProgramRound {
 }
 
 export interface RaceResult {
-  round: number;
-  winner: string;
-  time: string;
+  roundId: number;
+  distance: number;
+  winners: RaceWinner[];
+}
+
+export interface RaceWinner {
+  position: number;
+  horseId: number;
+  name: string;
+  color: string;
+  finishTime: number;
 }
 
 export interface Round {
@@ -43,4 +51,11 @@ export interface RaceState {
   currentRoundIndex: number;
   isRaceActive: boolean;
   results: RaceResult[];
+}
+
+export interface RaceEngineState {
+  positions: Map<number, number>;
+  isRunning: boolean;
+  animationFrameId: number | null;
+  finishTimes: Map<number, number>;
 }

@@ -1,10 +1,38 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import type { RaceState } from "../types";
 
 const store = useStore<RaceState>();
 const schedule = computed(() => store.state.schedule);
 const results = computed(() => store.state.results);
+
+const scheduleScroll = ref<HTMLElement | null>(null);
+const resultsScroll = ref<HTMLElement | null>(null);
+let isScrolling = false;
+
+const onScheduleScroll = (e: Event) => {
+  if (isScrolling) return;
+  isScrolling = true;
+
+  const target = e.target as HTMLElement;
+  if (resultsScroll.value) {
+    resultsScroll.value.scrollTop = target.scrollTop;
+  }
+
+  requestAnimationFrame(() => {
+    isScrolling = false;
+  });
+};
+
+const onResultsScroll = (e: Event) => {
+  if (isScrolling) return;
+  isScrolling = true;
+
+  const target = e.target as HTMLElement;
+  if (scheduleScroll.value) {
+    scheduleScroll.value.scrollTop = target.scrollTop;
+  }
+};
 </script>
 
 <template>
@@ -16,7 +44,11 @@ const results = computed(() => store.state.results);
         Race Program
       </div>
 
-      <div class="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar p-1 space-y-4 min-h-0">
+      <div
+        ref="scheduleScroll"
+        @scroll="onScheduleScroll"
+        class="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar p-1 space-y-4 min-h-0"
+      >
         <div v-for="round in schedule" :key="round.id" class="flex flex-col flex-shrink-0">
           <div
             class="bg-orange-600 text-[9px] font-bold px-2 py-0.5 text-white flex justify-between rounded-t"
@@ -39,7 +71,11 @@ const results = computed(() => store.state.results);
         Race Results
       </div>
 
-      <div class="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar p-1 space-y-4 min-h-0">
+      <div
+        ref="resultsScroll"
+        @scroll="onResultsScroll"
+        class="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar p-1 space-y-4 min-h-0"
+      >
         <div
           v-if="results.length === 0"
           class="h-full flex items-center justify-center text-[9px] text-slate-600 italic px-4 text-center"
@@ -56,8 +92,13 @@ const results = computed(() => store.state.results);
           </div>
 
           <BaseTable :data="res.winners" class="compact-table">
-            <BaseColumn dataKey="position" label="Pos" width="25%" align="center" />
-            <BaseColumn dataKey="name" label="Name" width="75%" align="left" />
+            <BaseColumn
+              dataKey="name"
+              label="Horse Name"
+              width="100%"
+              align="left"
+              :cellRenderer="({ row }: { row: any }) => `${row.position}. ${row.name}`"
+            />
           </BaseTable>
         </div>
       </div>
