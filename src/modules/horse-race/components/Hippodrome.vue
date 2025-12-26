@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { useRaceEngine } from "../composable/useRaceEngine";
 import type { RaceState, RaceWinner } from "../types";
-import { getColoredFilter } from "../utils/raceUtils";
 import RaceResultDialog from "./RaceResultDialog.vue";
 
 const store = useStore<RaceState>();
@@ -108,16 +107,19 @@ const handleCloseDialog = () => {
                 {{ horse.name }}
               </span>
             </div>
-
-            <img
-              :src="raceEngine.getHorseImage(horse.id)"
-              alt="Horse"
-              class="h-8 w-auto object-contain transition-all"
-              :style="{
-                filter: getColoredFilter(horse.color),
-              }"
-            />
-
+            <div class="relative inline-flex items-center">
+              <div
+                class="h-8 w-16 relative"
+                :style="{
+                  backgroundColor: horse.color,
+                  maskImage: `url(${raceEngine.getHorseImage(horse.id)})`,
+                  WebkitMaskSize: 'contain',
+                  maskRepeat: 'no-repeat',
+                  WebkitMaskPosition: 'center',
+                  transform: 'translateZ(0)',
+                }"
+              ></div>
+            </div>
             <div
               v-if="raceEngine.getNamePosition(horse.id) === 'back'"
               class="absolute left-full ml-2 whitespace-nowrap"
