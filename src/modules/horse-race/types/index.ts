@@ -22,3 +22,25 @@ export interface RaceResult {
   winner: string;
   time: string;
 }
+
+export interface Round {
+  id: number;
+  distance: number;
+  participants: Horse[];
+  results: HorseResult[];
+  status: "waiting" | "completed" | "running";
+}
+
+export interface HorseResult {
+  horseId: number;
+  name: string;
+  finishTime: number;
+}
+
+export interface RaceState {
+  horses: Horse[];
+  schedule: Round[];
+  currentRoundIndex: number;
+  isRaceActive: boolean;
+  results: RaceResult[];
+}

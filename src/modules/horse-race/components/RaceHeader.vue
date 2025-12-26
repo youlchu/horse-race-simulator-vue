@@ -1,5 +1,12 @@
 <script setup lang="ts">
-defineEmits(["generate", "start-pause"]);
+import type { RaceState } from "../types";
+
+const store = useStore<RaceState>();
+
+const handleGenerateProgram = () => {
+  store.dispatch("createSchedule", 6);
+  console.log("Generated Schedule:", store.state.schedule);
+};
 </script>
 
 <template>
@@ -12,27 +19,18 @@ defineEmits(["generate", "start-pause"]);
         class="flex items-center justify-center p-2 rounded-full hover:bg-slate-800 transition-colors group"
         title="Back to Menu"
       >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2.5"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          class="text-slate-400 group-hover:text-orange-500 transition-colors"
-        >
-          <path d="m15 18-6-6 6-6" />
-        </svg>
+        <img
+          src="@/assets/icons/back.png"
+          alt="Back"
+          class="w-5 h-5 brightness-0 invert group-hover:opacity-80 transition-opacity"
+        />
       </router-link>
 
       <div class="text-xl uppercase">Horse Racing</div>
     </div>
 
     <div class="flex gap-4">
-      <BaseButton variant="secondary" @click="$emit('generate')"> Generate Program </BaseButton>
+      <BaseButton variant="secondary" @click="handleGenerateProgram"> Generate Program </BaseButton>
 
       <BaseButton variant="primary" @click="$emit('start-pause')"> Start / Pause </BaseButton>
     </div>
