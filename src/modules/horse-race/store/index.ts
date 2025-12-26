@@ -1,4 +1,4 @@
-import type { Horse, RaceState, Round } from "../types";
+import type { Horse, RaceState, Round, RaceResult } from "../types";
 import { mockHorses } from "../_mocks/horses";
 import { generateSchedule } from "../utils/raceUtils";
 
@@ -18,6 +18,18 @@ export const raceStore = createStore<RaceState>({
 
     SET_SCHEDULE(state: RaceState, schedule: Round[]) {
       state.schedule = schedule;
+    },
+
+    SET_RACE_ACTIVE(state: RaceState, isActive: boolean) {
+      state.isRaceActive = isActive;
+    },
+
+    NEXT_ROUND(state: RaceState) {
+      state.currentRoundIndex++;
+    },
+
+    ADD_RACE_RESULT(state: RaceState, result: RaceResult) {
+      state.results.push(result);
     },
   },
 
@@ -44,6 +56,23 @@ export const raceStore = createStore<RaceState>({
 
       const schedule = generateSchedule(state.horses, roundCount);
       commit("SET_SCHEDULE", schedule);
+    },
+
+    toggleRace({
+      state,
+      commit,
+    }: {
+      state: RaceState;
+      commit: (mutation: string, payload?: any) => void;
+    }) {
+      commit("SET_RACE_ACTIVE", !state.isRaceActive);
+    },
+
+    addResult(
+      { commit }: { commit: (mutation: string, payload?: any) => void },
+      result: RaceResult
+    ) {
+      commit("ADD_RACE_RESULT", result);
     },
   },
 
