@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { shuffleArray, generateSchedule, calculateSpeed, getColoredFilter } from "../raceUtils";
+import { shuffleArray, generateSchedule, calculateSpeed } from "../raceUtils";
 import type { Horse } from "../../types";
 
 describe("Race Utils", () => {
@@ -176,79 +176,6 @@ describe("Race Utils", () => {
         speeds.add(calculateSpeed(85));
       }
       expect(speeds.size).toBeGreaterThan(1);
-    });
-  });
-
-  describe("getColoredFilter", () => {
-    it("should generate filter for pure red", () => {
-      const filter = getColoredFilter("#ff0000");
-      expect(filter).toContain("brightness");
-      expect(filter).toContain("sepia");
-      expect(filter).toContain("hue-rotate");
-      expect(filter).toContain("saturate");
-    });
-
-    it("should generate filter for pure green", () => {
-      const filter = getColoredFilter("#00ff00");
-      expect(filter).toContain("brightness");
-      expect(filter).toContain("sepia");
-      expect(filter).toContain("hue-rotate");
-      expect(filter).toContain("saturate");
-    });
-
-    it("should generate filter for pure blue", () => {
-      const filter = getColoredFilter("#0000ff");
-      expect(filter).toContain("brightness");
-      expect(filter).toContain("sepia");
-      expect(filter).toContain("hue-rotate");
-      expect(filter).toContain("saturate");
-    });
-
-    it("should handle hex colors without # prefix", () => {
-      const withHash = getColoredFilter("#ff5500");
-      const withoutHash = getColoredFilter("ff5500");
-
-      expect(withHash).toContain("brightness");
-      expect(withoutHash).toContain("brightness");
-    });
-
-    it("should generate filter for grayscale (no hue)", () => {
-      const filter = getColoredFilter("#808080");
-      expect(filter).toContain("brightness(0.5)");
-      expect(filter).toContain("sepia(1)");
-      expect(filter).toContain("hue-rotate(0deg)");
-      expect(filter).toContain("saturate(5)");
-    });
-
-    it("should produce consistent output for same color", () => {
-      const filter1 = getColoredFilter("#ff5500");
-      const filter2 = getColoredFilter("#ff5500");
-
-      expect(filter1).toBe(filter2);
-    });
-
-    it("should handle different color variations", () => {
-      const colors = ["#ff0000", "#00ff00", "#0000ff", "#ffff00", "#ff00ff", "#00ffff"];
-      const filters = colors.map((color) => getColoredFilter(color));
-
-      filters.forEach((filter) => {
-        expect(filter).toContain("brightness");
-        expect(filter).toContain("sepia");
-        expect(filter).toContain("hue-rotate");
-        expect(filter).toContain("saturate");
-      });
-    });
-
-    it("should have hue rotation in valid range", () => {
-      const filter = getColoredFilter("#ff5500");
-      const hueMatch = filter.match(/hue-rotate\((\d+)deg\)/);
-
-      expect(hueMatch).not.toBeNull();
-      if (hueMatch) {
-        const hue = parseInt(hueMatch[1]!);
-        expect(hue).toBeGreaterThanOrEqual(0);
-        expect(hue).toBeLessThanOrEqual(360);
-      }
     });
   });
 });

@@ -108,6 +108,9 @@ const handleCloseDialog = () => {
               </span>
             </div>
             <div class="relative inline-flex items-center">
+              <!-- Debug: Rengi console'a yazdır -->
+              {{ console.log("Horse:", horse.name, "Color:", horse.color) }}
+
               <div
                 class="h-8 w-16 relative"
                 :style="{
